@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include<string.h>
+
+#define MAX_KARAKTER_SAYISI 50
+
+
+
+int main(int argc, char *argv[]) {
+
+
+	//Dosya islemleri:
+	FILE *dosyaCsv=fopen(argv[1],"r");
+	FILE *dosyaJson=fopen(argv[2],"w");
+	if(dosyaCsv != NULL && dosyaJson != NULL){
+		printf("dosya basariyla acildi \n");
+	}else{
+		printf("dosya acilirken hata meydana geldi");
+	}
+	//Atama islemleri:
+	char ch;
+	int satirSayac=0;
+	int commaCounter=0;
+	int row=0;
+	int column=0;	
+	int i=0, j=0;
+	char vrgl = ',';
+	char satirSonu ='\n';
+	char karakter;
+	int rowSayac=0;	
+	int colSayac=0;	
+	int valueSayac=0;
+	int k=0;
+	
+	//Colon ve Row Degerleri:
+	do{
+		ch=fgetc(dosyaCsv);
+		if(ch == ','){
+			commaCounter +=1;
+		}else if(ch == '\n'){
+			row+=1;
+				if(row == 1){
+					column = commaCounter +1;	
+				}
+		}
+	}while(!feof(dosyaCsv));	
+	
+	printf("%d tane value \n%d tane key\n",row*column,column);
+	int values=((row*column)-(column));
+	
+	printf("\n********************************************\n");
+	char key[200][MAX_KARAKTER_SAYISI];
+	char value[200][MAX_KARAKTER_SAYISI];
+
+	rewind(dosyaCsv);
+	k=column;
+
+//**************Key-Value*********************
+	while(!feof(dosyaCsv)){
+		karakter=fgetc(dosyaCsv);
+		
+	if(!strcmp(argv[3], "header=ON")){
+		if(rowSayac==0){
+			if(karakter==satirSonu){
+				colSayac=0;
+				j=0;
+				rowSayac+=1;
+			}
+			else if(karakter==vrgl){
+				colSayac+=1;
+				j=0;
+			}else{
+				key[colSayac][j]=karakter;
+				j++;
+			}	
+		}else{
+			if(karakter==satirSonu){
+				rowSayac+=1;
+				colSayac+=1;
+				j=0;
+			}
+			else if(karakter==vrgl){
+				colSayac+=1;
+				j=0;
+			}else{
+				value[colSayac][j]=karakter;
+				j++;
+			}	
+		}		
+	}		
+	else if(!strcmp(argv[3], "header=OFF")){
+		if(rowSayac==0){
+			if(karakter==satirSonu){
+				j=0;
+				colSayac=0;
+				rowSayac+=1;
+			}
+			else if(karakter==vrgl){
+				colSayac+=1;
+				j=0;
+			}else{
+				//key[colSayac][j]=karakter;
+				j++;
+			}	
+		}else{
+			if(karakter==satirSonu){
+				rowSayac+=1;
+				colSayac+=1;
+				j=0;
+			}
+			else if(karakter==vrgl){
+				colSayac+=1;
+				j=0;
+			}else{
+				value[colSayac][j]=karakter;
+				j++;
+			}	
+		}		
+	}
+	else{
+		printf("hata\n");
+		break;
+	}
+}
+	
+	int m=0;
+	int n=0;
+	int index=1;
+
+	if(!strcmp(argv[3], "header=ON")){
+		fprintf(dosyaJson,"{\n");
+		for(m=0;m<values;m++){
+		if(n==column){
+			n=0;
+			fprintf(dosyaJson,"},\n");
+			fprintf(dosyaJson,"{\n");
+		}
+		fprintf(dosyaJson,"\t\"%s\":\"%s\",\n",key[n], value[m]);
+		n++;
+	}
+	fprintf(dosyaJson,"}\n");
+}
+
+	else if(!strcmp(argv[3], "header=OFF")){
+		fprintf(dosyaJson,"{\n");
+		
+		for(m=0;m<values;m++){
+		if(n==column){
+			n=0;
+			index=1;
+			fprintf(dosyaJson,"},\n");
+			fprintf(dosyaJson,"{\n");
+		}
+		fprintf(dosyaJson,"\t\"col-%d\":\"%s\",\n",index,value[m]);
+		n++;
+		index++;
+	}
+	fprintf(dosyaJson,"}\n");
+}	
+	return 0;
+}
+
